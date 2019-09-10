@@ -1,0 +1,21 @@
+Варіант 14.
+1. Створити каталог MAIN. В цьому каталозі створити каталоги 1 та 2, а в каталозі 2 – ще один каталог UTIL. 
+2. В каталог UTIL скопіювати основні, на ваш погляд, утиліти WINDOWS.
+3. В каталозі 1 створити текстовий файл dirinfo з коротким описом цих утиліт. В каталозі 2 створити командний файл, що виводить на екран зміст файлу dirinfo.
+Результат показати викладачеві!
+4. Знищити всі створені вами файли та каталоги.
+
+md MAIN
+cd MAIN
+md 1
+md 2
+cd 2
+md UTIL
+copy "C:\Program Files (x86)\WinRAR\WinRAR.exe" "UTIL\WinRAR.exe"
+cd ..\1
+echo "WinRAR - software for opening and creating archives." > dirinfo.txt
+cd ..\2
+echo type ..\1\dirinfo.txt > show_dirinfo.bat
+
+cd ..\..\
+rmdir MAIN /s /q
