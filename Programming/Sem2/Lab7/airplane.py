@@ -70,3 +70,32 @@ class Boeing737(Airplane):
                 self.position['x'] += self.traction[1] / self.weight
             return "OK"
         return "Work experience of the main pilot is lower than 5 years. Change the main pilot."
+
+
+class AV8B(Airplane):
+    manufacturer = "McDonnell Douglas"
+    __rockets_and_boms = ["4 × AIM-9L Sidewinder", "6 × AIM-120 Amraam", "4 × AGM-65E Maverick", "10 × Mk.77"]
+    _combat_radius = 470
+
+    weight = 3000
+    wing_length = 3.6
+    engine = "Rolls-Royce Pegasus"
+
+    def __init__(self, pilot=None):
+        if pilot is None:
+            pilot = Pilot("Michi Kovalsky", 15)
+        self.pilot = pilot
+        self.crew = [pilot]
+
+    def fly(self):
+        if self.crew[0].work_experience > 10:
+            if self.traction[0] == "Up" and self.traction[1] > 500:
+                self.position['y'] += self.traction[1] / self.weight
+            if self.traction[0] == "Down" and self.traction[1] > 500:
+                self.position['y'] -= self.traction[1] / self.weight
+            if self.traction[0] == "Left" and self.traction[1] > 500:
+                self.position['x'] -= self.traction[1] / self.weight
+            if self.traction[0] == "Right" and self.traction[1] > 500:
+                self.position['x'] += self.traction[1] / self.weight
+            return "OK"
+        return "Work experience of the pilot is lower than 10 years. Change the pilot."
