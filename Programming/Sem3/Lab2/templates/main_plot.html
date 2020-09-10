@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Lab2</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet'>
+    <link type="text/css" rel="stylesheet" href="{{url_for('static', filename='styles.css')}}" />
+</head>
+<body>
+    <h2>Lab2</h2>
+    <form action="/" method="POST">
+        <label for="cols">Вибери часовий ряд:</label>
+        <select name="cols" id="cols">
+            <option value="NDVI" {{'selected' if col=="NDVI" else ''}}>NDVI</option>
+            <option value="BT" {{'selected' if col=="BT" else ''}}>BT</option>
+            <option value="VCI" {{'selected' if col=="VCI" else ''}}>VCI</option>
+            <option value="TCI" {{'selected' if col=="TCI" else ''}}>TCI</option>
+            <option value="VHI" {{'selected' if col=="VHI" else ''}}>VHI</option>
+        </select><br><br>
+        
+        <label for="provinces">Вибери область:</label>
+        <select name="provinces" id="provinces">
+            <option value="Черкаська" {{'selected' if province=="Черкаська" else ''}}>Черкаська</option>
+            <option value="Чернігівська" {{'selected' if province=="Чернігівська" else ''}}>Чернігівська</option>
+            <option value="Чернівецька" {{'selected' if province=="Чернівецька" else ''}}>Чернівецька</option>
+            <option value="Республіка Крим" {{'selected' if province=="Республіка Крим" else ''}}>Республіка Крим</option>
+            <option value="Дніпропетровська" {{'selected' if province=="Дніпропетровська" else ''}}>Дніпропетровська</option>
+            <option value="Донецька" {{'selected' if province=="Донецька" else ''}}>Донецька</option>
+            <option value="Івано-Франківська" {{'selected' if province=="Івано-Франківська" else ''}}>Івано-Франківська</option>
+            <option value="Харківська" {{'selected' if province=="Харківська" else ''}}>Харківська</option>
+            <option value="Херсонська" {{'selected' if province=="Херсонська" else ''}}>Херсонська</option>
+            <option value="Хмельницька" {{'selected' if province=="Хмельницька" else ''}}>Хмельницька</option>
+            <option value="Київська" {{'selected' if province=="Київська" else ''}}>Київська</option>
+            <option value="місто Київ" {{'selected' if province=="місто Київ" else ''}}>місто Київ</option>
+            <option value="Кіровоградська" {{'selected' if province=="Кіровоградська" else ''}}>Кіровоградська</option>
+            <option value="Луганська" {{'selected' if province=="Луганська" else ''}}>Луганська</option>
+            <option value="Львівська" {{'selected' if province=="Львівська" else ''}}>Львівська</option>
+            <option value="Миколаївська" {{'selected' if province=="Миколаївська" else ''}}>Миколаївська</option>
+            <option value="Одеська" {{'selected' if province=="Одеська" else ''}}>Одеська</option>
+            <option value="Полтавська" {{'selected' if province=="Полтавська" else ''}}>Полтавська</option>
+            <option value="Рівенська" {{'selected' if province=="Рівенська" else ''}}>Рівенська</option>
+            <option value="Севастопольська" {{'selected' if province=="Севастопольська" else ''}}>Севастопольська</option>
+            <option value="Сумська" {{'selected' if province=="Сумська" else ''}}>Сумська</option>
+            <option value="Тернопільська" {{'selected' if province=="Тернопільська" else ''}}>Тернопільська</option>
+            <option value="Закарпатська" {{'selected' if province=="Закарпатська" else ''}}>Закарпатська</option>
+            <option value="Вінницька" {{'selected' if province=="Вінницька" else ''}}>Вінницька</option>
+            <option value="Волинська" {{'selected' if province=="Волинська" else ''}}>Волинська</option>
+            <option value="Запорізька" {{'selected' if province=="Запорізька" else ''}}>Запорізька</option>
+            <option value="Житомирська" {{'selected' if province=="Житомирська" else ''}}>Житомирська</option>
+        </select><br><br>
+        
+        <label for="weeks">Обери тижні (символ ',' для декількох варіантів і символ '-' для інтервалів):</label>
+        <input type="text" id="weeks" name="weeks" value="{{weeks_text}}"><br><br>
+        
+        <input type="submit" class="button button_primary" value="Показати">
+    </form>
+    
+    <div class="result" style="padding-top: 20px; padding-bottom: 20px; float: left">
+        <div class="table-container" style="float: left">
+            <h2>Результат ({{province + ' область' if province not in ["місто Київ", "Республіка Крим"] else province}})</h2>
+            {% for table in tables %}
+                        {{ table|safe }}
+            {% endfor %}
+        </div>
+        
+        <div class="plot-container" style="float: right">
+            <img style="float: right" src="data:image/png;base64,{{data}}" />
+        </div>
+    </div>
+</body>
+</html>

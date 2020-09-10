@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Lab2</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet'>
+    <link type="text/css" rel="stylesheet" href="{{url_for('static', filename='styles.css')}}" />
+</head>
+<body>
+    <h2>Lab2</h2>
+    <form action="/" method="POST">
+        <label for="cols">Вибери часовий ряд:</label>
+        <select name="cols" id="cols">
+            <option value="NDVI">NDVI</option>
+            <option value="BT">BT</option>
+            <option value="VCI">VCI</option>
+            <option value="TCI">TCI</option>
+            <option value="VHI">VHI</option>
+        </select><br><br>
+        
+        <label for="provinces">Вибери область:</label>
+        <select name="provinces" id="provinces">
+            <option value="Черкаська">Черкаська</option>
+            <option value="Чернігівська">Чернігівська</option>
+            <option value="Чернівецька">Чернівецька</option>
+            <option value="Республіка Крим">Республіка Крим</option>
+            <option value="Дніпропетровська">Дніпропетровська</option>
+            <option value="Донецька">Донецька</option>
+            <option value="Івано-Франківська">Івано-Франківська</option>
+            <option value="Харківська">Харківська</option>
+            <option value="Херсонська">Херсонська</option>
+            <option value="Хмельницька">Хмельницька</option>
+            <option value="Київська">Київська</option>
+            <option value="місто Київ">місто Київ</option>
+            <option value="Кіровоградська">Кіровоградська</option>
+            <option value="Луганська">Луганська</option>
+            <option value="Львівська">Львівська</option>
+            <option value="Миколаївська">Миколаївська</option>
+            <option value="Одеська">Одеська</option>
+            <option value="Полтавська">Полтавська</option>
+            <option value="Рівенська">Рівенська</option>
+            <option value="Севастопольська">Севастопольська</option>
+            <option value="Сумська">Сумська</option>
+            <option value="Тернопільська">Тернопільська</option>
+            <option value="Закарпатська">Закарпатська</option>
+            <option value="Вінницька">Вінницька</option>
+            <option value="Волинська">Волинська</option>
+            <option value="Запорізька">Запорізька</option>
+            <option value="Житомирська">Житомирська</option>
+        </select><br><br>
+        
+        <label for="weeks">Обери тижні (символ ',' для декількох варіантів і символ '-' для інтервалів):</label>
+        <input type="text" id="weeks" name="weeks"><br><br>
+        
+        <input type="submit" class="button button_primary" value="Показати">
+    </form>
+</body>
+</html>
