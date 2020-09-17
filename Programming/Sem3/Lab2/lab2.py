@@ -94,10 +94,14 @@ def main():
         
             df = data[change_name(province) - 1]
             selection = df[(df['week'].isin(weeks)) & (df[col] != -1.0)][['year', 'week', col]]
+            sels = []
+            for week in weeks:
+                sels.append(df[(df['week'] == week) & (df[col] != -1.0)][['year', col]])
             
             fig = plt.figure()
-            years = selection['year']
-            plt.plot(years, selection[col], marker="o")
+            years = range(1981, 2021)
+            for i, sel in enumerate(sels):
+                plt.plot(sel['year'], sel[col], marker="o", label=weeks[i])
             plt.xticks(years, rotation=70)
             plt.ylabel(col, fontsize=14)
             fig.set_size_inches(9, 5.5, forward=True)
