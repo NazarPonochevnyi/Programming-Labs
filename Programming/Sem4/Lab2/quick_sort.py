@@ -28,7 +28,7 @@ quick_sort.count_comparisons = 0
 
 if __name__ == "__main__":
     arr = [5, 7, 1, 3, 4]
-    quick_sort(arr)
+    arr = quick_sort(arr)
     print(arr)
     print(quick_sort.count_copies)
     print(quick_sort.count_comparisons)
