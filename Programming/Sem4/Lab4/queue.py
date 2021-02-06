@@ -1,4 +1,4 @@
-# Stack implementation using dynamic array and linked list
+# Queue implementation using dynamic array and linked list
 
 from linked_list.linked_list import LinkedList
 
