@@ -141,3 +141,5 @@ if __name__ == "__main__":
             print(s.is_empty())
         elif command[0] in ('q', 'quit', 'exit'):
             break
+        else:
+            print("Command not found!")
