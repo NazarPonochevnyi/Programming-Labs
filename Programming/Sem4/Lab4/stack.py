@@ -76,15 +76,19 @@ class StackList:
         self._length = 0
 
     def show(self):
-        return self._stack[self._length - 1]
+        if self.is_empty():
+            return None
+        return self._stack.tail
 
     def put(self, item):
         self._stack.append(item)
         self._length += 1
 
     def pop(self):
+        if self.is_empty():
+            raise Exception("stack underflow")
         self._length -= 1
-        return self._stack.pop(self._length)
+        return self._stack.pop()
 
     def is_empty(self):
         return self._length == 0

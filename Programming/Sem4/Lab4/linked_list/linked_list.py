@@ -85,11 +85,11 @@ class LinkedList:
             raise Exception("list is empty")
         if index == 0:
             self._head = self._head.next
-            self._head.prev = None
+            if self._head is not None:
+                self._head.prev = None
             self._length -= 1
             return
         if index == self._length - 1:
-            print(self._tail.prev, self._tail, self._tail.next)
             self._tail = self._tail.prev
             self._tail.next = None
             self._length -= 1

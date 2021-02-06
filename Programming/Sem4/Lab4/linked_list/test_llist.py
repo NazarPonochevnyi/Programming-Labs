@@ -161,6 +161,13 @@ def test_pop(llist):
     item = llist.pop(1)
     assert item == 'car'
     assert repr(llist) == 'LinkedList(2, 4.4)'
+    item = llist.pop()
+    assert item == 4.4
+    assert repr(llist) == 'LinkedList(2)'
+    item = llist.pop()
+    assert item == 2
+    assert repr(llist) == 'LinkedList()'
+    llist.append(-7)
     with pytest.raises(IndexError):
         llist.pop(100)
     with pytest.raises(IndexError):
