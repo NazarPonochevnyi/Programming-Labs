@@ -10,14 +10,30 @@ ops = {
     '-': operator.sub,
     '*': operator.mul,
     '/': operator.truediv,
-    '%': operator.mod,
     '^': operator.xor
 }
+precedence = {'+': 1, '-': 1, '*': 2, '/': 2, '^': 3}
 
 
 def infix_to_postfix(string):
-    stack = deque()
-    return str(stack)
+    stack, output, string = deque(), '', string.replace(' ', '')
+    for s in string:
+        if s in ops:
+            while stack and stack[-1] in ops \
+                    and precedence[s] <= precedence[stack[-1]]:
+                output += stack.pop()
+            stack.append(s)
+        elif s == '(':
+            stack.append(s)
+        elif s == ')':
+            while stack and stack[-1] != '(':
+                output += stack.pop()
+            stack.pop()
+        else:
+            output += s
+    while stack:
+        output += stack.pop()
+    return output
 
 
 def postfix_to_infix(string):
@@ -39,13 +55,15 @@ def main():
         "A/(B-C)+D*(E-F)",
         "(A*B+C)/D-F/E"
     )
+    print("Input infix strings:")
+    pprint(infix_strings)
 
     postfix_strings = list(map(infix_to_postfix, infix_strings))
-    postfix_strings = ["AB - C * DEF + / +"]
-    new_infix_strings = list(map(postfix_to_infix, postfix_strings))
-
-    pprint(infix_strings)
+    print("\nConverted postfix strings:")
     pprint(postfix_strings)
+
+    new_infix_strings = list(map(postfix_to_infix, postfix_strings))
+    print("\nConverted infix strings to compare with input strings:")
     pprint(new_infix_strings)
 
 
