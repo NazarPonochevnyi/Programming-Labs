@@ -78,13 +78,13 @@ def main():
 
     print("\nStarting benchmark...")
     start_time = time.time()
-    for _ in range(10000):
+    for _ in range(100000):
         search_file('superword')
     duration = time.time() - start_time
     print(f"(file) Search execution time: {round(duration, 3)} s")
 
     start_time = time.time()
-    for _ in range(10000):
+    for _ in range(100000):
         search_tree('superword')
     duration = time.time() - start_time
     print(f"(tree) Search execution time: {round(duration, 3)} s")
