@@ -97,6 +97,14 @@ class BinaryTree:
                 if self.left is None and self.right is None:
                     self.data = None
                     return temp
+                elif self.left is None and temp.right is not None:
+                    self.data = self.right.data
+                    self.right = None
+                    return temp
+                elif temp.left is not None and temp.right is None:
+                    self.data = self.left.data
+                    self.left = None
+                    return temp
                 min_value = self.right.min()
                 self.data = min_value
                 if self.right.data == min_value:
