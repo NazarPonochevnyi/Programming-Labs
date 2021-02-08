@@ -97,11 +97,11 @@ class BinaryTree:
                 if self.left is None and self.right is None:
                     self.data = None
                     return temp
-                elif self.left is None and temp.right is not None:
+                elif self.left is None and self.right is not None:
                     self.data = self.right.data
                     self.right = None
                     return temp
-                elif temp.left is not None and temp.right is None:
+                elif self.left is not None and self.right is None:
                     self.data = self.left.data
                     self.left = None
                     return temp
