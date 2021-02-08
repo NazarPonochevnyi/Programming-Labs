@@ -70,6 +70,12 @@ class BinaryTree:
                     if temp.left is None and temp.right is None:
                         self.left = None
                         return temp
+                    if temp.left is None and temp.right is not None:
+                        self.left = self.left.right
+                        return temp
+                    if temp.left is not None and temp.right is None:
+                        self.left = self.left.left
+                        return temp
                 return self.left.remove(value)
             elif value > self.data:
                 if self.right is None:
@@ -79,22 +85,20 @@ class BinaryTree:
                     if temp.left is None and temp.right is None:
                         self.right = None
                         return temp
+                    if temp.left is None and temp.right is not None:
+                        self.right = self.right.right
+                        return temp
+                    if temp.left is not None and temp.right is None:
+                        self.right = self.right.left
+                        return temp
                 return self.right.remove(value)
             else:
                 temp = self.data
-                if self.left is None:
-                    self.data = self.right.data
-                    self.right = None
-                    return temp
-                elif self.right is None:
-                    self.data = self.left.data
-                    self.left = None
+                if self.left is None and self.right is None:
+                    self.data = None
                     return temp
                 min_value = self.right.min()
                 self.data = min_value
-                if self.right.data == min_value:
-                    self.right = None
-                    return temp
                 self.right.remove(min_value)
                 return temp
         else:
