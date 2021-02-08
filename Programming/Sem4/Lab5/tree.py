@@ -99,6 +99,9 @@ class BinaryTree:
                     return temp
                 min_value = self.right.min()
                 self.data = min_value
+                if self.right.data == min_value:
+                    self.right = None
+                    return temp
                 self.right.remove(min_value)
                 return temp
         else:
