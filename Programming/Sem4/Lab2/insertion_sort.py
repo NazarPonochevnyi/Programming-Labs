@@ -15,7 +15,6 @@ def insertion_sort(array):
             i -= 1
         array[i + 1] = key
         insertion_sort.count_copies += 1
-    return array
 
 
 if __name__ == "__main__":

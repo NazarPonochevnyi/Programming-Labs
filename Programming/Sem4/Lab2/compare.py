@@ -23,10 +23,11 @@ sorted_test10000 = sorted(test10000)
 
 # analyse function
 def analyse(func, data, answer, number, repeat_num=100):
+    func_answer = data.copy()
     func.count_copies = 0
     func.count_comparisons = 0
     start_time = time()
-    func_answer = func(data.copy())
+    func(func_answer)
     num_copies = func.count_copies
     num_comps = func.count_comparisons
     for _ in range(repeat_num - 1):
