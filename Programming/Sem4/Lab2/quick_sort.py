@@ -9,9 +9,8 @@ def quick_sort(array, left=0, right=None):
     i = left
     j = right
     pivot = array[randint(left, right)]
-    quick_sort.count_comparisons += 1
     while i <= j:
-        quick_sort.count_comparisons += 4
+        quick_sort.count_comparisons += 2
         while array[i] < pivot:
             i += 1
             quick_sort.count_comparisons += 1
@@ -23,7 +22,6 @@ def quick_sort(array, left=0, right=None):
             i += 1
             j -= 1
             quick_sort.count_copies += 2
-    quick_sort.count_comparisons += 2
     if left < j:
         quick_sort(array, left, j)
     if i < right:
