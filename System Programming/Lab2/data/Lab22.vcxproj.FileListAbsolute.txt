@@ -1,0 +1,2 @@
+D:\Microsoft Visual Studio\Workspace\Lab22\Debug\Lab22.exe
+D:\Microsoft Visual Studio\Workspace\Lab22\Debug\Lab22.pdb
