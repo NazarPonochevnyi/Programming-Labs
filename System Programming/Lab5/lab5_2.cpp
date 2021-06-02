@@ -259,7 +259,7 @@ DWORD WINAPI AdminThreadFunction(LPVOID lpParam)
     printf("(%d - %d) Admin thread created and waiting for requests...\n", Child2ProcessId, AdminThreadId);
 
     while (TRUE) {
-        /*
+        // Start block
         res = admin.check(req);
         if (res.status) {
             admin.book();
@@ -267,7 +267,7 @@ DWORD WINAPI AdminThreadFunction(LPVOID lpParam)
         }
         else
             _tprintf(TEXT("(%d - %d) Room cannot be booked\n"), Child2ProcessId, AdminThreadId);
-        */
+        // End block
     };
     return 0;
 }
@@ -296,7 +296,7 @@ int _tmain(int argc, TCHAR* argv[])
         printf("OpenEvent failed (%d)\n", GetLastError());
         return 1;
     }
-    
+
     printf("(%d) Waiting for event from Child1 process... \n", Child2ProcessId);
     WaitForSingleObject(ghWriteEvent, 10000);
 
@@ -341,24 +341,6 @@ int _tmain(int argc, TCHAR* argv[])
         _tprintf(TEXT("SetNamedPipeHandleState failed. GLE=%d\n"), GetLastError());
         return -1;
     }
-
-    // TODO: 
-    // Read rooms data
-    rooms[0] = Room(1, 10);
-    rooms[1] = Room(2, 10);
-    rooms[2] = Room(3, 10, "3 1 3 4 1 10 8");
-    rooms[3] = Room(4, 35, "1 8 5");
-    rooms[4] = Room(5, 35);
-    rooms[5] = Room(6, 50, "1 1001 99");
-    rooms[6] = Room(7, 100);
-    rooms[7] = Room(8, 100);
-    rooms[8] = Room(9, 100);
-    rooms[9] = Room(10, 100);
-    rooms[10] = Room(11, 100);
-    rooms[11] = Room(12, 100);
-    rooms[12] = Room(13, 100);
-    rooms[13] = Room(14, 100);
-    rooms[14] = Room(15, 1000);
 
     // Create Admin Threads.
     DWORD               dwAdmThreadIdArray[MAX_ADMINS];
