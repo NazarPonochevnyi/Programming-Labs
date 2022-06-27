@@ -1,127 +1,72 @@
 """
-Interpolation
+Solving Cauchy problem
 
 """
 
 import math
 import numpy as np
-import sympy as sp
-import pandas as pd
 import matplotlib.pyplot as plt
 
 
 # ------------ Input ------------
 
 
-def f(x):
-    return x**2 * math.cos(x)
+def f(x, y):
+    return ((1 - x**2) * (y - math.cos(x))) - math.sin(x)
 
 
-A, B = -math.pi / 2, math.pi
+H, Y0 = 0.1, 1
+A, B = 0, math.pi
 
 
 # ------------ Code ------------
 
 
-def chebyshev_nodes(n, a, b):
-    nodes = []
-    for k in range(1, n + 1):
-        nodes.append((0.5 * (a + b)) + ((0.5 * (b - a)) * math.cos((((2 * k) - 1) * math.pi) / (2 * n))))
-    return nodes
+def runge_kutt(h, y0):
+    x = np.arange(A, B, h)
+    y = [y0]
+    for i in x:
+        k1 = h * f(i, y[-1])
+        k2 = h * f(i + h / 2, y[-1] + k1 / 2)
+        k3 = h * f(i + h / 2, y[-1] + k2 / 2)
+        k4 = h * f(i + h, y[-1] + k3)
+        y.append(y[-1] + (k1 + 2 * k2 + 2 * k3 + k4) / 6)
+    return tuple(zip(x, y))
 
 
-def build_lagrange_polynom(X, y):
-    x = sp.Symbol('x')
-    L = 0
-    for i in range(len(y)):
-      nominator = y[i]
-      for j in range(len(y)):
-        if j != i:
-          nominator *= (x - X[j])
-      denominator = 1
-      for j in range(len(y)):
-        if j != i:
-          denominator *= (X[i] - X[j])
-      L += (nominator / denominator)
-    return sp.simplify(L)
-
-
-def build_cubic_splines(x0, x, y):
-    x = np.asfarray(x)
-    y = np.asfarray(y)
-    size = len(x)
-    xdiff = np.diff(x)
-    ydiff = np.diff(y)
-    Li = np.empty(size)
-    Li_1 = np.empty(size-1)
-    z = np.empty(size)
-    Li[0] = math.sqrt(2*xdiff[0])
-    Li_1[0] = 0.0
-    B0 = 0.0
-    z[0] = B0 / Li[0]
-
-    for i in range(1, size-1, 1):
-        Li_1[i] = xdiff[i-1] / Li[i-1]
-        Li[i] = math.sqrt(2*(xdiff[i-1]+xdiff[i]) - Li_1[i-1] * Li_1[i-1])
-        Bi = 6*(ydiff[i]/xdiff[i] - ydiff[i-1]/xdiff[i-1])
-        z[i] = (Bi - Li_1[i-1]*z[i-1])/Li[i]
-
-    i = size - 1
-    Li_1[i-1] = xdiff[-1] / Li[i-1]
-    Li[i] = math.sqrt(2*xdiff[-1] - Li_1[i-1] * Li_1[i-1])
-    Bi = 0.0
-    z[i] = (Bi - Li_1[i-1]*z[i-1])/Li[i]
-
-    i = size-1
-    z[i] = z[i] / Li[i]
-    for i in range(size-2, -1, -1):
-        z[i] = (z[i] - Li_1[i-1]*z[i+1])/Li[i]
-
-    index = x.searchsorted(x0)
-    np.clip(index, 1, size-1, index)
-    xi1, xi0 = x[index], x[index-1]
-    yi1, yi0 = y[index], y[index-1]
-    zi1, zi0 = z[index], z[index-1]
-    hi1 = xi1 - xi0
-
-    f0 = zi0/(6*hi1)*(xi1-x0)**3 + \
-         zi1/(6*hi1)*(x0-xi0)**3 + \
-         (yi1/hi1 - zi1*hi1/6)*(x0-xi0) + \
-         (yi0/hi1 - zi0*hi1/6)*(xi1-x0)
-    return f0
+def adams(h, y0):
+    runge_kutt_ = runge_kutt(h, y0)[:4]
+    x = np.arange(A, B, h)
+    y = [i[1] for i in runge_kutt_]
+    for i in range(3, len(x)):
+        y.append(y[i] + (55 * f(x[i], y[i]) -
+                         59 * f(x[i - 1], y[i - 1]) +
+                         37 * f(x[i - 2], y[i - 2]) -
+                         9 * f(x[i - 3], y[i - 3])) * h / 24)
+    return tuple(zip(x, y))
 
 
 def main():
-    X = np.array(sorted(chebyshev_nodes(10, A, B)))
-    print(f"Chebyshev's nodes (X):\n{X}")
+    y_kutt = np.array([i[1] for i in runge_kutt(H, Y0)])
+    y_adam = np.array([i[1] for i in adams(H, Y0)])
 
-    Y = np.array([f(x) for x in X])
-    df = pd.DataFrame({'X': X, 'Y': Y})
-    print(f"\nTable:\n{df}")
-    
-    x = sp.Symbol('x')
-    L = build_lagrange_polynom(X, Y)
-    print(f"\nLagrange's polynom:\n{L}")
-    
-    ls = np.linspace(A - 1, B + 1, 100)
-    ls_Y_true = np.array([f(i) for i in ls])
-    ls_Y_L = np.array([L.subs(x, i) for i in ls])
-    r = max(np.abs(ls_Y_true - ls_Y_L))
-    print(f"Max absolute error of the Lagrange's polynom: {round(r, 4)}")
+    x = np.arange(A, B, H)
+    y_true = np.array([math.cos(i) for i in x])
 
+    e_kutt = np.abs(y_true - y_kutt)
+    e_adam = np.abs(y_true - y_adam)
 
-    plt.scatter(X, Y, color="red")
-    plt.plot(ls, ls_Y_true, color="green")
-    plt.plot(ls, ls_Y_L, linestyle='--')
+    plt.plot(x, y_true, color="green", label="True y")
+    plt.plot(x, y_kutt, color="red", linestyle='--', label="Kutta y")
+    plt.plot(x, y_adam, linestyle='--', label="Adams y")
+    plt.title("y = cos x")
+    plt.legend()
     plt.show()
 
-    ls_Y_S = build_cubic_splines(ls, X, Y)
-    r = max(np.abs(ls_Y_true - ls_Y_S))
-    print(f"\nMax absolute error of the Cubic splines: {round(r, 4)}")
-
-    plt.scatter(X, Y, color="red")
-    plt.plot(ls, ls_Y_true, color="green")
-    plt.plot(ls, ls_Y_S, linestyle='--')
+    plt.plot(x, e_kutt, color="red", linestyle='--', label="Kutta error")
+    plt.plot(x, e_adam, linestyle='--', label="Adams error")
+    plt.title("Error")
+    plt.legend()
     plt.show()
 
 
