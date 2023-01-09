@@ -1,59 +1,90 @@
 import cv2
+import imutils
 import numpy as np
-from graythresh import graythresh
+from scipy import ndimage
+from skimage.feature import peak_local_max
+from skimage.segmentation import watershed
 
 
 def detect_brightness_differences(image, method):
     gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    gray_image = cv2.GaussianBlur(gray_image, (5, 5), 0)
     if method == "LoG":
         diff_image = cv2.Laplacian(gray_image, cv2.CV_64F)
     elif method == "Canny":
-        diff_image = cv2.Canny(gray_image, 100, 200)
+        diff_image = cv2.Canny(gray_image, 50, 100)
     else:
         raise ValueError("Invalid method. Choose 'LoG' or 'Canny'.")
     return diff_image
 
-def global_threshold(image, level):
-    _, binary_image = cv2.threshold(image, level * 255, 255, cv2.THRESH_BINARY)
-    return binary_image
+def global_threshold(image):
+     _, binary_image = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+     return binary_image
 
 def segment_by_watersheds_dt(image):
     gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    _, binary_image = cv2.threshold(gray_image, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
-    binary_image = cv2.bitwise_not(binary_image)
-    dist_transform = cv2.distanceTransform(binary_image, cv2.DIST_L2, 3)
-    cv2.normalize(dist_transform, dist_transform, 0, 1.0, cv2.NORM_MINMAX)
-    _, markers = cv2.connectedComponents(binary_image)
-    markers = markers + 1
-    markers[dist_transform > 0.5] = 0
-    cv2.watershed(image, markers)
-    mask = np.zeros_like(markers, dtype=np.uint8)
-    mask[markers == -1] = 255
-    return mask
+    binary_image = global_threshold(gray_image)
+    D = ndimage.distance_transform_edt(binary_image)
+    localMax = peak_local_max(D, indices=False, min_distance=20, labels=binary_image)
+    markers = ndimage.label(localMax, structure=np.ones((3, 3)))[0]
+    labels = watershed(-D, markers, mask=binary_image)
+    for label in np.unique(labels):
+        if label == 0:
+            continue
+        mask = np.zeros(gray_image.shape, dtype="uint8")
+        mask[labels == label] = 255
+        cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        cnts = imutils.grab_contours(cnts)
+        c = max(cnts, key=cv2.contourArea)
+        ((x, y), r) = cv2.minEnclosingCircle(c)
+        cv2.circle(image, (int(x), int(y)), int(r), (0, 0, 255), 2)
+    return image
 
 def segment_by_watersheds_gradient(image):
     gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    _, binary_image = cv2.threshold(gray_image, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
-    binary_image = cv2.bitwise_not(binary_image)
-    sobel_x = cv2.Sobel(binary_image, cv2.CV_32F, 1, 0, ksize=3)
-    sobel_y = cv2.Sobel(binary_image, cv2.CV_32F, 0, 1, ksize=3)
+    sobel_x = cv2.Sobel(gray_image, cv2.CV_32F, 1, 0, ksize=3)
+    sobel_y = cv2.Sobel(gray_image, cv2.CV_32F, 0, 1, ksize=3)
     gradient_magnitude = cv2.magnitude(sobel_x, sobel_y)
-    cv2.normalize(gradient_magnitude, gradient_magnitude, 0, 1.0, cv2.NORM_MINMAX)
-    _, markers = cv2.connectedComponents(binary_image)
-    markers = markers + 1
-    markers[gradient_magnitude > 0.5] = 0
-    cv2.watershed(image, markers)
-    mask = np.zeros_like(markers, dtype=np.uint8)
-    mask[markers == -1] = 255
-    return mask
+    (minVal, maxVal) = (np.min(gradient_magnitude), np.max(gradient_magnitude))
+    gradient = (255 * ((gradient_magnitude - minVal) / (maxVal - minVal)))
+    gradient = gradient.astype("uint8")
+    sqKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
+    gradient = cv2.morphologyEx(gradient, cv2.MORPH_CLOSE, sqKernel)
+    binary_image = global_threshold(gradient)
+    binary_image = cv2.morphologyEx(binary_image, cv2.MORPH_OPEN, sqKernel)
+    binary_image = cv2.erode(binary_image, sqKernel)
+    D = ndimage.distance_transform_edt(binary_image)
+    localMax = peak_local_max(D, indices=False, min_distance=20, labels=binary_image)
+    markers = ndimage.label(localMax, structure=np.ones((3, 3)))[0]
+    labels = watershed(-D, markers, mask=binary_image)
+    plotted_circles = []
+    for label in np.unique(labels):
+        if label == 0:
+            continue
+        mask = np.zeros(gray_image.shape, dtype="uint8")
+        mask[labels == label] = 255
+        cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        cnts = imutils.grab_contours(cnts)
+        c = max(cnts, key=cv2.contourArea)
+        ((x, y), r) = cv2.minEnclosingCircle(c)
+        overlaps = False
+        for (px, py, pr) in plotted_circles:
+            if np.sqrt((x - px)**2 + (y - py)**2) < r + pr - 10:
+                overlaps = True
+                break
+        if not overlaps:
+            cv2.circle(image, (int(x), int(y)), int(r), (0, 0, 255), 2)
+            plotted_circles.append((x, y, r))
+    return image
 
 def color_segmentation_kmeans(image, k):
     image = image.astype(np.float32)
-    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
+    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 100, 0.85)
     _, labels, centers = cv2.kmeans(image.reshape(-1, 3), k, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
-    mask = labels.reshape(image.shape[:2])
-    mask = mask.astype(np.uint8)
-    return mask
+    centers = np.uint8(centers)
+    segmented_data = centers[labels.flatten()]
+    segmented_image = segmented_data.reshape((image.shape))
+    return segmented_image
 
 
 if __name__ == "__main__":
@@ -66,8 +97,7 @@ if __name__ == "__main__":
     cv2.destroyAllWindows()
 
     image = cv2.imread("pic.4.tif", 0)  # Read image in grayscale
-    level = graythresh(image)
-    binary_image = global_threshold(image, level)
+    binary_image = global_threshold(image)
     cv2.imshow("Global Threshold", binary_image)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
@@ -85,7 +115,7 @@ if __name__ == "__main__":
     cv2.destroyAllWindows()
 
     image = cv2.imread("pic.8.jpg")
-    mask = color_segmentation_kmeans(image, 3)  # 3 clusters
+    mask = color_segmentation_kmeans(image, 2)
     cv2.imshow("Color Segmentation (K-Means)", mask)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
