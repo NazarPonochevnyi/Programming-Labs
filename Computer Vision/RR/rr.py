@@ -25,7 +25,7 @@ for im_name in os.listdir(folder):
     gray = cv2.GaussianBlur(gray, (5, 5), 0)
     edged = cv2.Canny(gray, 50, 100, 3)
 
-    cnts = cv2.findContours(edged.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    cnts = cv2.findContours(edged.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     cnts = imutils.grab_contours(cnts)
     cnts = sorted(cnts, key=cv2.contourArea, reverse=True)[:5]
     for (i, c) in enumerate(cnts):
