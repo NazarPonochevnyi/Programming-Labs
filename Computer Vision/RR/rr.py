@@ -35,7 +35,7 @@ for im_name in os.listdir(folder):
             screenCnt = approx
             break
 
-    rect = np.array([list(p[0]) for p in screenCnt])
+    rect = np.squeeze(screenCnt)
     top_left, bottom_left = sorted(sorted(rect, key=lambda x: x[0])[:2], key=lambda x: x[1])
     top_right, bottom_right = sorted(sorted(rect, key=lambda x: -x[0])[:2], key=lambda x: x[1])
     pts1 = np.float32([top_left, top_right, bottom_right, bottom_left])
