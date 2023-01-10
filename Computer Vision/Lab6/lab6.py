@@ -8,8 +8,8 @@ from skimage.segmentation import watershed
 
 def detect_brightness_differences(image, method):
     gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    gray_image = cv2.GaussianBlur(gray_image, (5, 5), 0)
     if method == "LoG":
+        gray_image = cv2.GaussianBlur(gray_image, (5, 5), 0)
         diff_image = cv2.Laplacian(gray_image, cv2.CV_64F)
     elif method == "Canny":
         diff_image = cv2.Canny(gray_image, 50, 100)
@@ -96,7 +96,7 @@ if __name__ == "__main__":
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-    image = cv2.imread("pic.4.tif", 0)  # Read image in grayscale
+    image = cv2.imread("pic.4.tif", 0)
     binary_image = global_threshold(image)
     cv2.imshow("Global Threshold", binary_image)
     cv2.waitKey(0)
