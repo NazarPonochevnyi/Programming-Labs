@@ -1,24 +1,17 @@
+import time
 import numpy as np
-from scipy.fftpack import fft2, ifft2
 from imageio import imread
 import matplotlib.pyplot as plt
+from scipy.signal import convolve2d
+from dftfilter import lp_filter, hp_filter, filter, freqz2
 
-# Import functions from the script provided in the previous response
-from dftfilter import paddedsize
-from dftfilter import dftuv
-from dftfilter import lp_filter
-from dftfilter import hp_filter
 
-# Load the image
+# Load the images
 f = imread('pic1.jpg')
-f = np.array(f)
+f2 = imread('pic2.jpg')
+PQ = np.shape(f)
+PQ2 = np.shape(f2)
 
-# Get expansion parameters for zero-padding
-PQ = paddedsize(f)
-
-# Compute the Fourier transform of the image with expansion
-f = np.expand_dims(f, axis=-1)
-F = fft2(f, PQ[0], PQ[1])
 
 # Generate a low-pass filter with an ideal filter
 H_lp_ideal = lp_filter('ideal', PQ, 40)
@@ -41,98 +34,90 @@ H_hp_gauss = hp_filter('gaussian', PQ, 40)
 # Generate a high-pass filter with a Laplacian filter
 H_hp_laplacian = hp_filter('laplacian', PQ)
 
+# Generate a Sobel filter
+K_sobel_x = np.array([[-1, -2, -1], [0, 0, 0], [1, 2, 1]])
+H_sobel_x = freqz2(K_sobel_x, *PQ2)
+
+
 # Perform low-pass filtering with an ideal filter
-G_lp_ideal = H_lp_ideal * F
-g_lp_ideal = np.real(ifft2(G_lp_ideal))
-g_lp_ideal = g_lp_ideal[:f.shape[0], :f.shape[1]]
+g_lp_ideal = filter(f, H_lp_ideal)
 
 # Perform low-pass filtering with a Butterworth filter
-G_lp_btw = H_lp_btw * F
-g_lp_btw = np.real(ifft2(G_lp_btw))
-g_lp_btw = g_lp_btw[:f.shape[0], :f.shape[1]]
+g_lp_btw = filter(f, H_lp_btw)
 
 # Perform low-pass filtering with a Gaussian filter
-G_lp_gauss = H_lp_gauss * F
-g_lp_gauss = np.real(ifft2(G_lp_gauss))
-g_lp_gauss = g_lp_gauss[:f.shape[0], :f.shape[1]]
+g_lp_gauss = filter(f, H_lp_gauss)
 
 # Perform high-pass filtering with an ideal filter
-G_hp_ideal = H_hp_ideal * F
-g_hp_ideal = np.real(ifft2(G_hp_ideal))
-g_hp_ideal = g_hp_ideal[:f.shape[0], :f.shape[1]]
+g_hp_ideal = filter(f, H_hp_ideal)
 
 # Perform high-pass filtering with a Butterworth filter
-G_hp_btw = H_hp_btw * F
-g_hp_btw = np.real(ifft2(G_hp_btw))
-g_hp_btw = g_hp_btw[:f.shape[0], :f.shape[1]]
+g_hp_btw = filter(f, H_hp_btw)
 
 # Perform high-pass filtering with a Gaussian filter
-G_hp_gauss = H_hp_gauss * F
-g_hp_gauss = np.real(ifft2(G_hp_gauss))
-g_hp_gauss = g_hp_gauss[:f.shape[0], :f.shape[1]]
+g_hp_gauss = filter(f, H_hp_gauss)
 
 # Perform high-pass filtering with a Laplacian filter
-G_hp_laplacian = H_hp_laplacian * F
-g_hp_laplacian = np.real(ifft2(G_hp_laplacian))
-g_hp_laplacian = g_hp_laplacian[:f.shape[0], :f.shape[1]]
+g_hp_laplacian = filter(f, H_hp_laplacian)
 
-# Load the second image
-f2 = imread('pic2.jpg')
+# Perform Sobel x filtering in the spatial domain
+start_time = time.time()
+for _ in range(1000):
+    g_sobel_x_s = convolve2d(f2, K_sobel_x)
+print(f"Sobel x filtering in the spatial domain time: {round(time.time() - start_time, 2)} s")
 
-# Compute the Fourier transform of the second image
-F2 = fft2(f2)
+# Perform Sobel x filtering in the freq domain
+start_time = time.time()
+for _ in range(1000):
+    g_sobel_x_f = filter(f2, H_sobel_x)
+print(f"Sobel x filtering in the freq domain: {round(time.time() - start_time, 2)} s")
 
-# Generate a low-pass filter with an ideal filter
-H2_lp_ideal = lp_filter('ideal', F2.shape, 40)
-
-# Perform low-pass filtering with an ideal filter in the frequency domain
-G2_lp_ideal = H2_lp_ideal * F2
-g2_lp_ideal = np.real(ifft2(G2_lp_ideal))
-
-# Perform low-pass filtering with an ideal filter in the spatial domain
-h2_lp_ideal = lp_filter('ideal', f2.shape, 40)
-g2_lp_ideal_spatial = np.real(ifft2(fft2(f2) * h2_lp_ideal))
 
 # Display the original and filtered images
 plt.figure()
-plt.subplot(231)
+plt.subplot(241)
 plt.imshow(f, cmap='gray')
-plt.title('Original image')
+plt.title('Image')
 plt.axis('off')
-plt.subplot(232)
+plt.subplot(242)
 plt.imshow(g_lp_ideal, cmap='gray')
-plt.title('Low-pass filtering with an ideal filter')
+plt.title('LP Ideal')
 plt.axis('off')
-plt.subplot(233)
+plt.subplot(243)
 plt.imshow(g_lp_btw, cmap='gray')
-plt.title('Low-pass filtering with a Butterworth filter')
+plt.title('LP Butterworth')
 plt.axis('off')
-plt.subplot(234)
+plt.subplot(244)
 plt.imshow(g_lp_gauss, cmap='gray')
-plt.title('Low-pass filtering with a Gaussian filter')
+plt.title('LP Gaussian')
 plt.axis('off')
-plt.subplot(235)
+plt.subplot(245)
 plt.imshow(g_hp_ideal, cmap='gray')
-plt.title('High-pass filtering with an ideal filter')
+plt.title('HP Ideal')
 plt.axis('off')
-plt.subplot(236)
+plt.subplot(246)
 plt.imshow(g_hp_btw, cmap='gray')
-plt.title('High-pass filtering with a Butterworth filter')
+plt.title('HP Butterworth')
 plt.axis('off')
-
-plt.figure()
-plt.subplot(221)
+plt.subplot(247)
 plt.imshow(g_hp_gauss, cmap='gray')
-plt.title('High-pass filtering with a Gaussian filter')
+plt.title('HP Gaussian')
 plt.axis('off')
-plt.subplot(222)
+plt.subplot(248)
 plt.imshow(g_hp_laplacian, cmap='gray')
-plt.title('High-pass filtering with a Laplacian filter')
+plt.title('HP Laplacian')
 plt.axis('off')
-plt.subplot(223)
+plt.figure()
+plt.subplot(131)
 plt.imshow(f2, cmap='gray')
-plt.title('Original image')
+plt.title('Image 2')
 plt.axis('off')
-plt.subplot(224)
-plt.imshow(g2_lp_ideal, cmap='gray')
-plt.title('Low-pass filtering with an ideal filter in the frequency')
+plt.subplot(132)
+plt.imshow(g_sobel_x_s, cmap='gray')
+plt.title('Sobel X (Spat)')
+plt.axis('off')
+plt.subplot(133)
+plt.imshow(g_sobel_x_f, cmap='gray')
+plt.title('Sobel X (Freq)')
+plt.axis('off')
+plt.show()
