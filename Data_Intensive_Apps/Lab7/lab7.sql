@@ -1,9 +1,9 @@
 /*
 docker network create cassandra-network
-docker run --name node1 --net cassandra-network -d --rm cassandra
-docker run --name node2 --net cassandra-network -d --rm cassandra
-docker run --name node3 --net cassandra-network -d --rm cassandra
-docker exec -it node1 cqlsh
+docker run --name node1 -e CASSANDRA_CLUSTER_NAME=MyCluster -e CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch -e CASSANDRA_DC=datacenter1 --net cassandra-network -d --rm cassandra
+docker run --name node2 -e CASSANDRA_SEEDS=node1 -e CASSANDRA_CLUSTER_NAME=MyCluster -e CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch -e CASSANDRA_DC=datacenter1 --net cassandra-network -d --rm cassandra
+docker run --name node3 -e CASSANDRA_SEEDS=node1 -e CASSANDRA_CLUSTER_NAME=MyCluster -e CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch -e CASSANDRA_DC=datacenter2 --net cassandra-network -d --rm cassandra
+docker exec -it node1 bash (cqlsh, nodetool status)
 */
 
 
@@ -76,54 +76,49 @@ INSERT INTO keyspace3.items (id, name, price, manufacturer, category, properties
 INSERT INTO keyspace3.items (id, name, price, manufacturer, category, properties) VALUES (8,'Fitbit Versa 3', 300, 'Fitbit', 'Smart Watch', {'display':'LCD','storage':'4GB','water_resistant':'Yes'});
 APPLY BATCH;
 
-nodetool status;
-
 -- select all rows from the table 'items'
 SELECT * FROM keyspace1.items WHERE category = 'Phone' AND manufacturer = 'Apple';
 
--- display the nodes on which the data is stored
-nodetool getendpoints keyspace1 items "Phone";
-nodetool getendpoints keyspace2 items "Phone";
-nodetool getendpoints keyspace3 items "Phone";
+/*
+- display the nodes on which the data is stored
+nodetool getendpoints keyspace1 items "Phone"
+nodetool getendpoints keyspace2 items "Phone"
+nodetool getendpoints keyspace3 items "Phone"
+*/
 
--- disable the gossip and thrift protocol on the node
-nodetool disablegossip;
-nodetool disablethrift;
-
-ALTER KEYSPACE keyspace1 WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': 1} AND DURABLE_WRITES = true AND read_repair_chance = 1.0 AND read_consistency='QUORUM' AND write_consistency='TWO';
-
-ALTER KEYSPACE keyspace2 WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': 2} AND DURABLE_WRITES = true AND read_repair_chance = 1.0 AND read_consistency='ALL' AND write_consistency='ALL';
+CONSISTENCY;
+CONSISTENCY ONE;
+SELECT * FROM keyspace1.items;
+UPDATE keyspace1.items SET price = 900 WHERE category = 'Phone' AND manufacturer = 'Apple' AND id = 0 IF EXISTS;
+CONSISTENCY TWO;
+SELECT * FROM keyspace2.items;
+UPDATE keyspace2.items SET price = 900 WHERE category = 'Phone' AND manufacturer = 'Apple' AND id = 0 IF EXISTS;
+CONSISTENCY THREE;
+SELECT * FROM keyspace3.items;
+UPDATE keyspace3.items SET price = 900 WHERE category = 'Phone' AND manufacturer = 'Apple' AND id = 0 IF EXISTS;
 
 /*
-sudo nano /etc/iptables/iptables.rules
-sudo iptables -F
-sudo iptables -A INPUT -i lo -j ACCEPT 
-sudo iptables -A OUTPUT -o lo -j ACCEPT
-sudo iptables -A INPUT -j DROP
-sudo iptables -A OUTPUT -j DROP
-sudo iptables-save > /etc/iptables/iptables.rules
-sudo service iptables restart
-sudo iptables -L
+docker network disconnect cassandra-network node1
+docker network disconnect cassandra-network node2
+docker network disconnect cassandra-network node3
 */
 
 -- alter the keyspace3 with a replication factor of 3
-ALTER KEYSPACE keyspace3 WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': 3} AND read_consistency='ONE' AND write_consistency='ONE';
+CONSISTENCY ONE;
 
 INSERT INTO keyspace3.items (id, name, price, manufacturer, category, properties) VALUES (5, 'LG V60', 800, 'LG', 'Phone', {'screen_size':'6.8 inches','storage':'128GB','color':'White'});
 INSERT INTO keyspace3.items (id, name, price, manufacturer, category, properties) VALUES (5, 'LG V60', 900, 'LG', 'Phone', {'screen_size':'6.8 inches','storage':'128GB','color':'Black'});
+INSERT INTO keyspace3.items (id, name, price, manufacturer, category, properties) VALUES (5, 'LG V60', 950, 'LG', 'Phone', {'screen_size':'6.8 inches','storage':'128GB','color':'Gray'});
 
 -- lightweight transaction 
 INSERT INTO keyspace3.items (id, name, price, manufacturer, category, properties) VALUES (6, 'LG V70', 950, 'LG', 'Phone', {'screen_size':'6.8 inches','storage':'128GB','color':'White'}) IF NOT EXISTS;
 INSERT INTO keyspace3.items (id, name, price, manufacturer, category, properties) VALUES (6, 'LG V70', 990, 'LG', 'Phone', {'screen_size':'6.8 inches','storage':'128GB','color':'Black'}) IF NOT EXISTS;
+INSERT INTO keyspace3.items (id, name, price, manufacturer, category, properties) VALUES (6, 'LG V70', 999, 'LG', 'Phone', {'screen_size':'6.8 inches','storage':'128GB','color':'Gray'}) IF NOT EXISTS;
 
 /*
-sudo iptables -F
-sudo iptables -P INPUT ACCEPT
-sudo iptables -P OUTPUT ACCEPT
-sudo iptables -F
-sudo iptables-save > /etc/iptables/iptables.rules
-sudo service iptables restart
-sudo iptables -L
+docker network connect cassandra-network node1
+docker network connect cassandra-network node2
+docker network connect cassandra-network node3
 */
 
 -- check how cassandra resolved the conflict
