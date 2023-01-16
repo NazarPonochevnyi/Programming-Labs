@@ -3,7 +3,6 @@ docker network create cassandra-network
 docker run --name node1 --net cassandra-network -d --rm cassandra
 docker run --name node2 --net cassandra-network -d --rm cassandra
 docker run --name node3 --net cassandra-network -d --rm cassandra
-docker exec -it node1 nodetool status
 docker exec -it node1 cqlsh
 */
 
@@ -78,8 +77,13 @@ INSERT INTO keyspace3.items (id, name, price, manufacturer, category, properties
 APPLY BATCH;
 nodetool status;
 
--- select all rows from the table 'items' in keyspace 'mykeyspace' where the category is 'Phone' and the color property is 'Silver' with a consistency level of ONE
-SELECT * FROM mykeyspace.items WHERE category='Phone' AND properties['color'] = 'Silver' ALLOW FILTERING;
+-- select all rows from the table 'items'
+SELECT * FROM keyspace1.items WHERE category='Phone' AND manufacturer = 'Apple';
+
+-- display the nodes on which the data is stored
+nodetool getendpoints keyspace1 items "Phone";
+nodetool getendpoints keyspace2 items "Phone";
+nodetool getendpoints keyspace3 items "Phone";
 
 -- disable the gossip and thrift protocol on the node
 nodetool disablegossip;
@@ -90,9 +94,6 @@ SELECT * FROM mykeyspace.items WHERE category='Phone' AND properties['color'] = 
 
 -- insert a new row into the table 'items' in keyspace 'mykeyspace' with a consistency level of TWO
 INSERT INTO mykeyspace.items (id, name, price, manufacturer, category, properties) VALUES (4, 'LG V60', 900, 'LG', 'Phone', {'screen_size':'6.8 inches','storage':'128GB','color':'White'}) USING CONSISTENCY TWO;
-
--- get the status of the nodes
-nodetool status;
 
 -- alter the keyspace 'mykeyspace'  with a replication factor of 3 and sets durable writes, default time to live, gc grace seconds and read repair chance.
 ALTER KEYSPACE mykeyspace WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': 3} AND DURABLE_WRITES = true AND default_time_to_live = 0 AND gc_grace_seconds = 864000 AND read_repair_chance = 1.0;
