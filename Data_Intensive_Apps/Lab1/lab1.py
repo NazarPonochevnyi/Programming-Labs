@@ -43,12 +43,14 @@ def increment_counter_pess():
 
 def increment_counter_opti():
     for _ in range(inc_value):
-        try:
-            counter = distrib_map.get(key)
-            counter += 1
-            distrib_map.replace(key, counter)
-        except hazelcast.exception.ConcurrentModificationError:
-            pass
+        while True:
+            try:
+                counter = distrib_map.get(key)
+                updated_counter = counter + 1
+                if distrib_map.replace_if_same(key, counter, updated_counter):
+                    break
+            except hazelcast.exception.ConcurrentModificationError:
+                pass
 
 def increment_counter_cp():
     for _ in range(inc_value):
