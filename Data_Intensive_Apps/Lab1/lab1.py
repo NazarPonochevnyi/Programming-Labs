@@ -3,6 +3,12 @@ import hazelcast
 import threading
 
 
+"""
+docker network create hazelcast-network
+docker run -it --network hazelcast-network --rm -e HZ_CLUSTERNAME=hello-world -v "C:\Users\Nazar\PythonWorkspace\Programming-Labs\Data_Intensive_Apps\Lab1\hazelcast.xml":/opt/hazelcast/config/hazelcast-docker.xml -p 5701:5701 hazelcast/hazelcast:5.1.5
+docker run -it --network hazelcast-network --rm -e HZ_CLUSTERNAME=hello-world -v "C:\Users\Nazar\PythonWorkspace\Programming-Labs\Data_Intensive_Apps\Lab1\hazelcast.xml":/opt/hazelcast/config/hazelcast-docker.xml -p 5702:5702 hazelcast/hazelcast:5.1.5
+docker run -it --network hazelcast-network --rm -e HZ_CLUSTERNAME=hello-world -v "C:\Users\Nazar\PythonWorkspace\Programming-Labs\Data_Intensive_Apps\Lab1\hazelcast.xml":/opt/hazelcast/config/hazelcast-docker.xml -p 5703:5703 hazelcast/hazelcast:5.1.5
+"""
 client = hazelcast.HazelcastClient(
     cluster_name="hello-world",
 )
